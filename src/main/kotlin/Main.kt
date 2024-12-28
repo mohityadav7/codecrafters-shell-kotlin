@@ -1,5 +1,5 @@
 fun main() {
     print("$ ")
     val command = readln()
-    print("$command not found")
+    print("$command: command not found")
 }
