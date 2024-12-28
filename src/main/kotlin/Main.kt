@@ -1,4 +1,6 @@
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -44,20 +46,42 @@ fun main() {
                         File(dirPath).listFiles()?.toList() ?: listOf()
                     }
                 inputArgs.subList(1, inputArgs.size).forEach { inputArg ->
-                    pathFiles.firstOrNull { it.name == inputArg }?.let {
-                        println("${it.name} is ${it.path}")
-                        return@forEach
-                    }
                     if (inputArg in builtinCommands) {
                         println("$inputArg is a shell builtin")
                     } else {
-                        println("$inputArg: not found")
+                        pathFiles.firstOrNull { it.name == inputArg }?.let {
+                            println("${it.name} is ${it.path}")
+                        } ?: run {
+                            println("$inputArg: not found")
+                        }
                     }
                 }
             }
 
             else -> {
-                println("$command: command not found")
+                System.getenv("PATH")
+                    .split(":")
+                    .filter { pathString ->
+                        Path.of(pathString).exists()
+                    }
+                    .flatMap { dirPath ->
+                        File(dirPath).listFiles()?.toList() ?: listOf()
+                    }.firstOrNull { it.name == command }?.let {
+                        try {
+                            val process = ProcessBuilder(inputArgs)
+                                .redirectErrorStream(true)
+                                .start()
+                            val reader = BufferedReader(InputStreamReader(process.inputStream))
+                            reader.lines().forEach {
+                                println(it)
+                            }
+                            process.waitFor()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    } ?: run {
+                    println("$command: command not found")
+                }
             }
         }
     }
