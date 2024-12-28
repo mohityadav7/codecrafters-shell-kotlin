@@ -5,6 +5,8 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
 
+var pwd = System.getProperty("user.dir")
+
 fun main() {
     while (true) {
         print("$ ")
@@ -51,7 +53,17 @@ fun handleCommand(inputLine: String) {
         }
 
         is Command.Pwd -> {
-            println(System.getProperty("user.dir"))
+            println(pwd)
+        }
+
+        is Command.Cd -> {
+            assert(args.isNotEmpty())
+            val path = args.first()
+            if (Path.of(path).exists()) {
+                pwd = path
+            } else {
+                println("cd: $path: No such file or directory")
+            }
         }
 
         is Command.Unknown -> {
@@ -90,6 +102,7 @@ sealed class Command(val value: String) {
     data object Type: Command("type")
     data object Exit: Command("exit")
     data object Pwd: Command("pwd")
+    data object Cd: Command("cd")
     class Unknown(value: String): Command(value)
 
     companion object {
