@@ -1,5 +1,7 @@
 import kotlin.system.exitProcess
 
+val builtinCommands = listOf("exit", "echo", "type")
+
 fun main() {
     while (true) {
         print("$ ")
@@ -27,6 +29,16 @@ fun main() {
             "echo" -> {
                 val echoString = words.subList(1, words.size).joinToString(separator = " ")
                 println(echoString)
+            }
+
+            "type" -> {
+                words.subList(1, words.size).forEach {
+                    if (it in builtinCommands) {
+                        println("$it is a shell builtin")
+                    } else {
+                        println("$it: not found")
+                    }
+                }
             }
 
             else -> {
