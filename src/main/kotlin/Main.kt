@@ -1,4 +1,6 @@
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.system.exitProcess
 
 val builtinCommands = listOf("exit", "echo", "type")
@@ -7,11 +9,11 @@ fun main() {
     while (true) {
         print("$ ")
         val line = readln()
-        val words = line.split(" ")
+        val inputArgs = line.split(" ")
 
         var command: String
         try {
-            command = words.first()
+            command = inputArgs.first()
         } catch (e: NoSuchElementException) {
             continue
         }
@@ -19,40 +21,37 @@ fun main() {
         when (command) {
             "exit" -> {
                 var statusCode = 0
-                if (words.size > 1) {
+                if (inputArgs.size > 1) {
                     try {
-                        statusCode = words[1].toInt()
+                        statusCode = inputArgs[1].toInt()
                     } catch (_: Exception) { }
                 }
                 exitProcess(statusCode)
             }
 
             "echo" -> {
-                val echoString = words.subList(1, words.size).joinToString(separator = " ")
+                val echoString = inputArgs.subList(1, inputArgs.size).joinToString(separator = " ")
                 println(echoString)
             }
 
             "type" -> {
-                val path = System.getenv("PATH")
-                val pathDirs = path.split(":")
-                val fileToPathMap = mutableMapOf<String, String>()
-                for (dir in pathDirs) {
-                    val directory = File(dir)
-                    directory.listFiles()?.forEach { file ->
-                        fileToPathMap[file.name] = file.path
+                val pathFiles = System.getenv("PATH")
+                    .split(":")
+                    .filter { pathString ->
+                        Path.of(pathString).exists()
                     }
-                }
-                words.subList(1, words.size).forEach {
-                    when (it) {
-                        in builtinCommands -> {
-                            println("$it is a shell builtin")
-                        }
-                        in fileToPathMap.keys -> {
-                            println("$it is ${fileToPathMap[it]}")
-                        }
-                        else -> {
-                            println("$it: not found")
-                        }
+                    .flatMap { dirPath ->
+                        File(dirPath).listFiles()?.toList() ?: listOf()
+                    }
+                inputArgs.subList(1, inputArgs.size).forEach { inputArg ->
+                    pathFiles.firstOrNull { it.name == inputArg }?.let {
+                        println("${it.name} is ${it.path}")
+                        return@forEach
+                    }
+                    if (inputArg in builtinCommands) {
+                        println("$inputArg is a shell builtin")
+                    } else {
+                        println("$inputArg: not found")
                     }
                 }
             }
@@ -61,6 +60,5 @@ fun main() {
                 println("$command: command not found")
             }
         }
-
     }
 }
