@@ -1,3 +1,4 @@
+import java.io.File
 import kotlin.system.exitProcess
 
 val builtinCommands = listOf("exit", "echo", "type")
@@ -32,11 +33,26 @@ fun main() {
             }
 
             "type" -> {
+                val path = System.getenv("PATH")
+                val pathDirs = path.split(":")
+                val fileToPathMap = mutableMapOf<String, String>()
+                for (dir in pathDirs) {
+                    val directory = File(dir)
+                    directory.listFiles()?.forEach { file ->
+                        fileToPathMap[file.name] = file.path
+                    }
+                }
                 words.subList(1, words.size).forEach {
-                    if (it in builtinCommands) {
-                        println("$it is a shell builtin")
-                    } else {
-                        println("$it: not found")
+                    when (it) {
+                        in builtinCommands -> {
+                            println("$it is a shell builtin")
+                        }
+                        in fileToPathMap.keys -> {
+                            println("$it is ${fileToPathMap[it]}")
+                        }
+                        else -> {
+                            println("$it: not found")
+                        }
                     }
                 }
             }
