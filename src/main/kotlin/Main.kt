@@ -50,6 +50,10 @@ fun handleCommand(inputLine: String) {
             println()
         }
 
+        is Command.Pwd -> {
+            println(System.getProperty("user.dir"))
+        }
+
         is Command.Unknown -> {
             val cmdPath = findExecutablePath(cmd.value)
             cmdPath?.let {
@@ -85,6 +89,7 @@ sealed class Command(val value: String) {
     data object Echo: Command("echo")
     data object Type: Command("type")
     data object Exit: Command("exit")
+    data object Pwd: Command("pwd")
     class Unknown(value: String): Command(value)
 
     companion object {
