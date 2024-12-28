@@ -5,15 +5,34 @@ fun main() {
         print("$ ")
         val line = readln()
         val words = line.split(" ")
-        if (words.isNotEmpty()) {
-            if (words.first() == "exit") {
+
+        var command: String
+        try {
+            command = words.first()
+        } catch (e: NoSuchElementException) {
+            continue
+        }
+
+        when (command) {
+            "exit" -> {
+                var statusCode = 0
                 if (words.size > 1) {
-                    exitProcess(words[1].toInt())
-                } else {
-                    exitProcess(0)
+                    try {
+                        statusCode = words[1].toInt()
+                    } catch (_: Exception) { }
                 }
+                exitProcess(statusCode)
+            }
+
+            "echo" -> {
+                val echoString = words.subList(1, words.size).joinToString(separator = " ")
+                println(echoString)
+            }
+
+            else -> {
+                println("$command: command not found")
             }
         }
-        println("${words[0]}: command not found")
+
     }
 }
